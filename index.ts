@@ -8,7 +8,7 @@ const SCREEN_DISTANCE = 1
 
 
 class Player {
-  public pos: Vector2 = new Vector2(6, 9)
+  public pos: Vector2 = new Vector2(2, 5)
   // dir is an angle represented in radians
   public dir: number = - PI / 4
 
@@ -76,11 +76,11 @@ type Scene = Array<Array<string | null>>
 const scene: Scene = [
   [null, null, null, null, null, null, null, null, null, null],
   [null, null, null, null, null, null, null, null, null, null],
-  [null, null, null, 'purple', null, null, null, null, null, null],
-  [null, null, null, 'pink', null, null, null, null, null, null],
-  [null, null, null, null, null, 'green', null, null, null, null],
-  [null, null, null, null, 'purple', null, null, null, null, null],
-  [null, null, null, null, 'red', null, null, null, null, null],
+  [null, null, null, 'purple', 'yellow', null, null, null, null, null],
+  [null, null, null, 'blue', 'green', null, null, null, null, null],
+  [null, null, null, null, null, null, null, null, null, null],
+  [null, null, null, null, null, null, null, null, null, null],
+  [null, null, null, null, null, null, null, null, null, null],
   [null, null, null, null, null, null, null, null, null, null],
   [null, null, null, null, null, null, null, null, null, null],
   [null, null, null, null, null, null, null, null, null, null],
@@ -103,25 +103,75 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let player = new Player()
 
-  window.addEventListener('keypress', (key) => {
-    const rotateFactor = PI / 100
-    const moveFactor = 0.1
+  let isMovingForward = false
+  let isMovingBackward = false
+  let isRotatingRight = false
+  let isRotatingLeft = false
+
+
+  const rotateFactor = PI / 250
+  const moveFactor = 0.03
+  window.addEventListener('keydown', (key) => {
     if (key.key === 'd') {
       // rotate right
-      player.dir += rotateFactor
+      isRotatingRight = true
     } else if (key.key === 'a') {
       // rotate left
-      player.dir -= rotateFactor
+      isRotatingLeft = true
     } else if (key.key === 'w') {
       // move forward
-      player.pos = player.pos.add(Vector2.fromAngle(player.dir).norm().mult(moveFactor))
+      isMovingForward = true
     } else if (key.key === 's') {
-      player.pos = player.pos.add(Vector2.fromAngle(player.dir).norm().mult(-moveFactor))
+      isMovingBackward = true
     }
+  })
+  window.addEventListener('keyup', (key) => {
+    if (key.key === 'd') {
+      // rotate right
+      isRotatingRight = false
+    } else if (key.key === 'a') {
+      // rotate left
+      isRotatingLeft = false
+    } else if (key.key === 'w') {
+      // move forward
+      isMovingForward = false
+    } else if (key.key === 's') {
+      isMovingBackward = false
+    }
+  })
+
+  let prevTimestamp = 0
+
+  const frame = (timestamp: number) => {
+    const deltaTime = (timestamp - prevTimestamp) / 1000
+    prevTimestamp = timestamp
+    const velocity = Vector2.fromAngle(player.dir).norm().mult(moveFactor)
+
+    if (isMovingForward) {
+      player.pos = player.pos.add(velocity)
+    }
+    if (isMovingBackward) {
+      player.pos = player.pos.sub(velocity)
+    }
+    if (isRotatingRight) {
+      player.dir += rotateFactor
+    }
+    if (isRotatingLeft) {
+      player.dir -= rotateFactor
+    }
+
     ctx.fillStyle = "#181818";
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+
     minimap(ctx, player)
     renderScene(ctx, player)
+
+    window.requestAnimationFrame(frame)
+  }
+
+  window.requestAnimationFrame(timestamp => {
+    prevTimestamp = timestamp
+    window.requestAnimationFrame(frame)
   })
 
   minimap(ctx, player)
